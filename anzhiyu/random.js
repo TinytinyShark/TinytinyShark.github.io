@@ -1,1 +1,0 @@
-var posts=["2023/07/18/Python文件读取中换行符的影响/","2023/05/23/博客重建完成/"];function toRandomPost(){pjax.loadUrl('/'+posts[Math.floor(Math.random() * posts.length)]);};
