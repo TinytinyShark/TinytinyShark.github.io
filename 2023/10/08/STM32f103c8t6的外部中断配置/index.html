@@ -1,0 +1,223 @@
+<!DOCTYPE html><html lang="zh-CN" data-theme="light"><head><meta charset="UTF-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="viewport" content="width=device-width, initial-scale=1.0,viewport-fit=cover"><title>【技术分享】STM32f103c8t6-外部中断配置 | 大鲨子の小窝</title><meta name="author" content="大鲨子"><meta name="copyright" content="大鲨子"><meta name="format-detection" content="telephone=no"><meta name="theme-color" content="#ffffff"><meta name="description" content="本文主要介绍STM32F103C8T6通过GPIO中断实现：按下按键1点亮LED，按下按键2熄灭LED的方法；顺便介绍如何同时初始化两个GPIO、EXTI和NVIC 第一步RCC开启时钟   第二步配置GPIO，选择端口为输入模式   第三步配置AFIO   第四步配置EXTI，选择边沿触发方式，如上升沿、下降沿、双边沿；还有选择触发响应方式，可以选择中断响应和事件响应   第五步配置NVIC">
+<meta property="og:type" content="article">
+<meta property="og:title" content="【技术分享】STM32f103c8t6-外部中断配置">
+<meta property="og:url" content="https://tinytinyshark.github.io/2023/10/08/STM32f103c8t6%E7%9A%84%E5%A4%96%E9%83%A8%E4%B8%AD%E6%96%AD%E9%85%8D%E7%BD%AE/index.html">
+<meta property="og:site_name" content="大鲨子の小窝">
+<meta property="og:description" content="本文主要介绍STM32F103C8T6通过GPIO中断实现：按下按键1点亮LED，按下按键2熄灭LED的方法；顺便介绍如何同时初始化两个GPIO、EXTI和NVIC 第一步RCC开启时钟   第二步配置GPIO，选择端口为输入模式   第三步配置AFIO   第四步配置EXTI，选择边沿触发方式，如上升沿、下降沿、双边沿；还有选择触发响应方式，可以选择中断响应和事件响应   第五步配置NVIC">
+<meta property="og:locale" content="zh_CN">
+<meta property="og:image" content="https://s1.ax1x.com/2023/05/24/p97manA.jpg">
+<meta property="article:published_time" content="2023-10-08T15:56:12.000Z">
+<meta property="article:modified_time" content="2023-10-08T16:13:16.378Z">
+<meta property="article:author" content="大鲨子">
+<meta property="article:tag" content="单片机">
+<meta property="article:tag" content="stm32">
+<meta property="article:tag" content="嵌入式">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://s1.ax1x.com/2023/05/24/p97manA.jpg"><link rel="shortcut icon" href="/img/favicon.png"><link rel="canonical" href="https://tinytinyshark.github.io/2023/10/08/STM32f103c8t6%E7%9A%84%E5%A4%96%E9%83%A8%E4%B8%AD%E6%96%AD%E9%85%8D%E7%BD%AE/index.html"><link rel="preconnect" href="//cdn.jsdelivr.net"/><link rel="preconnect" href="//busuanzi.ibruce.info"/><meta name="baidu-site-verification" content="codeva-VqmEzTjz2X"/><link rel="stylesheet" href="/css/index.css"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free/css/all.min.css" media="print" onload="this.media='all'"><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.min.css" media="print" onload="this.media='all'"><script>const GLOBAL_CONFIG = {
+  root: '/',
+  algolia: undefined,
+  localSearch: undefined,
+  translate: {"defaultEncoding":2,"translateDelay":0,"msgToTraditionalChinese":"繁","msgToSimplifiedChinese":"簡"},
+  noticeOutdate: undefined,
+  highlight: {"plugin":"highlighjs","highlightCopy":true,"highlightLang":true,"highlightHeightLimit":false},
+  copy: {
+    success: '复制成功',
+    error: '复制错误',
+    noSupport: '浏览器不支持'
+  },
+  relativeDate: {
+    homepage: false,
+    post: false
+  },
+  runtime: '天',
+  dateSuffix: {
+    just: '刚刚',
+    min: '分钟前',
+    hour: '小时前',
+    day: '天前',
+    month: '个月前'
+  },
+  copyright: undefined,
+  lightbox: 'fancybox',
+  Snackbar: undefined,
+  source: {
+    justifiedGallery: {
+      js: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.js',
+      css: 'https://cdn.jsdelivr.net/npm/flickr-justified-gallery/dist/fjGallery.min.css'
+    }
+  },
+  isPhotoFigcaption: false,
+  islazyload: false,
+  isAnchor: false,
+  percent: {
+    toc: true,
+    rightside: false,
+  },
+  autoDarkmode: false
+}</script><script id="config-diff">var GLOBAL_CONFIG_SITE = {
+  title: '【技术分享】STM32f103c8t6-外部中断配置',
+  isPost: true,
+  isHome: false,
+  isHighlightShrink: false,
+  isToc: true,
+  postUpdate: '2023-10-09 00:13:16'
+}</script><noscript><style type="text/css">
+  #nav {
+    opacity: 1
+  }
+  .justified-gallery img {
+    opacity: 1
+  }
+
+  #recent-posts time,
+  #post-meta time {
+    display: inline !important
+  }
+</style></noscript><script>(win=>{
+    win.saveToLocal = {
+      set: function setWithExpiry(key, value, ttl) {
+        if (ttl === 0) return
+        const now = new Date()
+        const expiryDay = ttl * 86400000
+        const item = {
+          value: value,
+          expiry: now.getTime() + expiryDay,
+        }
+        localStorage.setItem(key, JSON.stringify(item))
+      },
+
+      get: function getWithExpiry(key) {
+        const itemStr = localStorage.getItem(key)
+
+        if (!itemStr) {
+          return undefined
+        }
+        const item = JSON.parse(itemStr)
+        const now = new Date()
+
+        if (now.getTime() > item.expiry) {
+          localStorage.removeItem(key)
+          return undefined
+        }
+        return item.value
+      }
+    }
+  
+    win.getScript = url => new Promise((resolve, reject) => {
+      const script = document.createElement('script')
+      script.src = url
+      script.async = true
+      script.onerror = reject
+      script.onload = script.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        script.onload = script.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(script)
+    })
+  
+    win.getCSS = (url,id = false) => new Promise((resolve, reject) => {
+      const link = document.createElement('link')
+      link.rel = 'stylesheet'
+      link.href = url
+      if (id) link.id = id
+      link.onerror = reject
+      link.onload = link.onreadystatechange = function() {
+        const loadState = this.readyState
+        if (loadState && loadState !== 'loaded' && loadState !== 'complete') return
+        link.onload = link.onreadystatechange = null
+        resolve()
+      }
+      document.head.appendChild(link)
+    })
+  
+      win.activateDarkMode = function () {
+        document.documentElement.setAttribute('data-theme', 'dark')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#0d0d0d')
+        }
+      }
+      win.activateLightMode = function () {
+        document.documentElement.setAttribute('data-theme', 'light')
+        if (document.querySelector('meta[name="theme-color"]') !== null) {
+          document.querySelector('meta[name="theme-color"]').setAttribute('content', '#ffffff')
+        }
+      }
+      const t = saveToLocal.get('theme')
+    
+          if (t === 'dark') activateDarkMode()
+          else if (t === 'light') activateLightMode()
+        
+      const asideStatus = saveToLocal.get('aside-status')
+      if (asideStatus !== undefined) {
+        if (asideStatus === 'hide') {
+          document.documentElement.classList.add('hide-aside')
+        } else {
+          document.documentElement.classList.remove('hide-aside')
+        }
+      }
+    
+    const detectApple = () => {
+      if(/iPad|iPhone|iPod|Macintosh/.test(navigator.userAgent)){
+        document.documentElement.classList.add('apple')
+      }
+    }
+    detectApple()
+    })(window)</script><meta name="generator" content="Hexo 6.3.0"></head><body><div id="web_bg"></div><div id="sidebar"><div id="menu-mask"></div><div id="sidebar-menus"><div class="avatar-img is-center"><img src="https://s1.ax1x.com/2023/05/24/p97manA.jpg" onerror="onerror=null;src='/img/friend_404.gif'" alt="avatar"/></div><div class="sidebar-site-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><hr/><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 目录</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于站主</span></a></div></div></div></div><div class="post" id="body-wrap"><header class="post-bg" id="page-header" style="background: linear-gradient(20deg, #F05F57, #4b1248)"><nav id="nav"><span id="blog-info"><a href="/" title="大鲨子の小窝"><span class="site-name">大鲨子の小窝</span></a></span><div id="menus"><div id="search-button"><a class="site-page social-icon search" href="javascript:void(0);"><i class="fas fa-search fa-fw"></i><span> 搜索</span></a></div><div class="menus_items"><div class="menus_item"><a class="site-page" href="/"><i class="fa-fw fas fa-home"></i><span> 主页</span></a></div><div class="menus_item"><a class="site-page" href="/archives/"><i class="fa-fw fas fa-archive"></i><span> 归档</span></a></div><div class="menus_item"><a class="site-page" href="/categories/"><i class="fa-fw fas fa-folder-open"></i><span> 目录</span></a></div><div class="menus_item"><a class="site-page" href="/about/"><i class="fa-fw fas fa-heart"></i><span> 关于站主</span></a></div></div><div id="toggle-menu"><a class="site-page" href="javascript:void(0);"><i class="fas fa-bars fa-fw"></i></a></div></div></nav><div id="post-info"><h1 class="post-title">【技术分享】STM32f103c8t6-外部中断配置</h1><div id="post-meta"><div class="meta-firstline"><span class="post-meta-date"><i class="far fa-calendar-alt fa-fw post-meta-icon"></i><span class="post-meta-label">发表于</span><time class="post-meta-date-created" datetime="2023-10-08T15:56:12.000Z" title="发表于 2023-10-08 23:56:12">2023-10-08</time><span class="post-meta-separator">|</span><i class="fas fa-history fa-fw post-meta-icon"></i><span class="post-meta-label">更新于</span><time class="post-meta-date-updated" datetime="2023-10-08T16:13:16.378Z" title="更新于 2023-10-09 00:13:16">2023-10-09</time></span><span class="post-meta-categories"><span class="post-meta-separator">|</span><i class="fas fa-inbox fa-fw post-meta-icon"></i><a class="post-meta-categories" href="/categories/STM32/">STM32</a></span></div><div class="meta-secondline"><span class="post-meta-separator">|</span><span class="post-meta-pv-cv" id="" data-flag-title="【技术分享】STM32f103c8t6-外部中断配置"><i class="far fa-eye fa-fw post-meta-icon"></i><span class="post-meta-label">阅读量:</span><span id="busuanzi_value_page_pv"><i class="fa-solid fa-spinner fa-spin"></i></span></span></div></div></div></header><main class="layout" id="content-inner"><div id="post"><article class="post-content" id="article-container"><font size="3">
+
+<p>本文主要介绍STM32F103C8T6通过GPIO中断实现：按下按键1点亮LED，按下按键2熄灭LED的方法；顺便介绍如何同时初始化两个GPIO、EXTI和NVIC<br></p>
+<h3>第一步</h3>RCC开启时钟
+<br><br>
+
+<h3>第二步</h3>配置GPIO，选择端口为输入模式
+<br><br>
+
+<h3>第三步</h3>配置AFIO
+<br><br>
+
+<h3>第四步</h3>配置EXTI，选择边沿触发方式，如上升沿、下降沿、双边沿；还有选择触发响应方式，可以选择中断响应和事件响应
+<br><br>
+
+<h3>第五步</h3>配置NVIC，分配一个优先级，最后通过NVIC，外部中断就能进入CPU
+<br><br>
+
+<p>具体代码如下<br><br>Key.c:</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;stm32f10x.h&quot;</span>                  <span class="comment">// Device header</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">Key_Init</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="comment">//RCC开启时钟</span></span><br><span class="line">	RCC_APB2PeriphClockCmd(RCC_APB2Periph_GPIOB | RCC_APB2Periph_GPIOA, ENABLE); <span class="comment">//同时开启GPIOA和GPIOB的时钟的方法！</span></span><br><span class="line">	RCC_APB2PeriphClockCmd(RCC_APB2Periph_AFIO, ENABLE); <span class="comment">//开启AFIO的时钟</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//配置GPIO</span></span><br><span class="line">	<span class="comment">//注：同时配置两个GPIO的方法如下：只需要一个结构体，可以先配置GPIOB的mode、speed、pin后用该结构体初始化GPIOB，然后再配置GPIOA的mode、speed、pin后用该结构体初始化GPIOA即可</span></span><br><span class="line">	GPIO_InitTypeDef GPIO_InitStructure;</span><br><span class="line">	GPIO_InitStructure.GPIO_Speed = GPIO_Speed_50MHz;</span><br><span class="line">	</span><br><span class="line">	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;</span><br><span class="line">	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_11;</span><br><span class="line">	GPIO_Init(GPIOB, &amp;GPIO_InitStructure); <span class="comment">//初始化GPIOB</span></span><br><span class="line">	</span><br><span class="line">	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_IPU;</span><br><span class="line">	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_6;  <span class="comment">//PA6用于第二个按键输入</span></span><br><span class="line">	GPIO_Init(GPIOA, &amp;GPIO_InitStructure); <span class="comment">//初始化GPIOA的PA6</span></span><br><span class="line">	</span><br><span class="line">	GPIO_InitStructure.GPIO_Mode = GPIO_Mode_Out_PP;</span><br><span class="line">	GPIO_InitStructure.GPIO_Pin = GPIO_Pin_2;  <span class="comment">//PA2用于LED输出</span></span><br><span class="line">	GPIO_Init(GPIOA, &amp;GPIO_InitStructure); <span class="comment">//初始化GPIOA的PA2</span></span><br><span class="line">	GPIO_WriteBit(GPIOA, GPIO_Pin_2, Bit_SET); <span class="comment">//刚开始先让PA2熄灭</span></span><br><span class="line">	</span><br><span class="line"></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//配置AFIO</span></span><br><span class="line">	GPIO_EXTILineConfig(GPIO_PortSourceGPIOB, GPIO_PinSource11); <span class="comment">//这样AFIO的数据选择器就被拨到GPIOB外设上，对应PB11号引脚，PB11号引脚的电平信号就可以顺利通过AFIO，进入到EXTI电路</span></span><br><span class="line">	</span><br><span class="line">	<span class="comment">//配置EXTI</span></span><br><span class="line">	<span class="comment">//这里同时配置两个EXTI的方法和GPIO相同，只需一个结构体，然后先后配置并初始化两个不同通道即可</span></span><br><span class="line">	EXTI_InitTypeDef EXTI_InitStructure;</span><br><span class="line">	</span><br><span class="line">	EXTI_InitStructure.EXTI_Line = EXTI_Line11; <span class="comment">//PB11在第11个线路，所以用EXTI_Line11</span></span><br><span class="line">	EXTI_InitStructure.EXTI_LineCmd = ENABLE;</span><br><span class="line">	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; <span class="comment">//中断模式/事件模式，这里选择中断模式</span></span><br><span class="line">	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; <span class="comment">//上升沿触发/下降沿触发/双边沿触发，这里选择下降沿触发，即低电平触发</span></span><br><span class="line">	EXTI_Init(&amp;EXTI_InitStructure);</span><br><span class="line">	</span><br><span class="line">	EXTI_InitStructure.EXTI_Line = EXTI_Line6; <span class="comment">//PA6在第6个线路，所以用EXTI_Line6</span></span><br><span class="line">	EXTI_InitStructure.EXTI_LineCmd = ENABLE;</span><br><span class="line">	EXTI_InitStructure.EXTI_Mode = EXTI_Mode_Interrupt; <span class="comment">//中断模式/事件模式，这里选择中断模式</span></span><br><span class="line">	EXTI_InitStructure.EXTI_Trigger = EXTI_Trigger_Falling; <span class="comment">//上升沿触发/下降沿触发/双边沿触发，这里选择下降沿触发，即低电平触发</span></span><br><span class="line">	EXTI_Init(&amp;EXTI_InitStructure);</span><br><span class="line">	</span><br><span class="line">	<span class="comment">//配置NVIC</span></span><br><span class="line">	<span class="comment">//同时配置两个不同NVIC，方法同上</span></span><br><span class="line">	NVIC_PriorityGroupConfig(NVIC_PriorityGroup_2); <span class="comment">//设置NVIC优先级分组</span></span><br><span class="line">	</span><br><span class="line">	NVIC_InitTypeDef NVIC_InitStructure; <span class="comment">//设置NVIC结构体</span></span><br><span class="line">	</span><br><span class="line">	NVIC_InitStructure.NVIC_IRQChannel = EXTI15_10_IRQn; <span class="comment">//设置中断通道，EXTI11在NVIC的通道为EXTI15_10_IRQn，如果选择其他通道，详情需要查手册</span></span><br><span class="line">	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;</span><br><span class="line">	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = <span class="number">1</span>; <span class="comment">//抢占优先级</span></span><br><span class="line">	NVIC_InitStructure.NVIC_IRQChannelSubPriority = <span class="number">1</span>; <span class="comment">//响应优先级</span></span><br><span class="line">	NVIC_Init(&amp;NVIC_InitStructure); <span class="comment">//初始化NVIC</span></span><br><span class="line">	</span><br><span class="line">	NVIC_InitStructure.NVIC_IRQChannel = EXTI9_5_IRQn; <span class="comment">//设置中断通道，EXTI6在NVIC的通道为EXTI9_5_IRQn，如果选择其他通道，详情需要查手册</span></span><br><span class="line">	NVIC_InitStructure.NVIC_IRQChannelCmd = ENABLE;</span><br><span class="line">	NVIC_InitStructure.NVIC_IRQChannelPreemptionPriority = <span class="number">0</span>; <span class="comment">//抢占优先级</span></span><br><span class="line">	NVIC_InitStructure.NVIC_IRQChannelSubPriority = <span class="number">0</span>; <span class="comment">//响应优先级</span></span><br><span class="line">	NVIC_Init(&amp;NVIC_InitStructure); <span class="comment">//初始化NVIC</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//中断函数</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//在启动文件中找到 EXTI11 的中断函数名（中断函数名不能随便取，必须和启动文件中规定的保持一致！）</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">EXTI15_10_IRQHandler</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span>(EXTI_GetITStatus(EXTI_Line11) == SET) <span class="comment">//判断EXTI11的中断标志位，如果为 SET 就执行中用户代码</span></span><br><span class="line">	&#123;</span><br><span class="line">		</span><br><span class="line">		GPIO_WriteBit(GPIOA, GPIO_Pin_2, Bit_RESET); <span class="comment">//按下PB11按键，PA2处LED点亮</span></span><br><span class="line">		</span><br><span class="line">		EXTI_ClearITPendingBit(EXTI_Line11); <span class="comment">//最后清除标志位，跳出中断函数，防止中断函数重复执行</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"></span><br><span class="line"><span class="comment">//在启动文件中找到 EXTI6 的中断函数名（中断函数名不能随便取，必须和启动文件中规定的保持一致！）</span></span><br><span class="line"><span class="type">void</span> <span class="title function_">EXTI9_5_IRQHandler</span><span class="params">(<span class="type">void</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">	<span class="keyword">if</span>(EXTI_GetITStatus(EXTI_Line6) == SET) <span class="comment">//判断EXTI6的中断标志位，如果为 SET 就执行中用户代码</span></span><br><span class="line">	&#123;</span><br><span class="line">		</span><br><span class="line">		GPIO_WriteBit(GPIOA, GPIO_Pin_2, Bit_SET); <span class="comment">//按下PB11按键，PA2处LED熄灭</span></span><br><span class="line">		</span><br><span class="line">		EXTI_ClearITPendingBit(EXTI_Line6); <span class="comment">//最后清除标志位，跳出中断函数，防止中断函数重复执行</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<br>
+key.h:
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">ifndef</span> __KEY_H</span></span><br><span class="line"><span class="meta">#<span class="keyword">define</span> __KEY_H</span></span><br><span class="line"></span><br><span class="line"><span class="type">void</span> <span class="title function_">Key_Init</span><span class="params">(<span class="type">void</span>)</span>;</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="keyword">endif</span></span></span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<br>
+main.c:
+
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;stm32f10x.h&quot;</span>                  <span class="comment">// Device header</span></span></span><br><span class="line"><span class="meta">#<span class="keyword">include</span> <span class="string">&quot;Key.h&quot;</span></span></span><br><span class="line"></span><br><span class="line"><span class="type">int</span> <span class="title function_">main</span><span class="params">()</span></span><br><span class="line">&#123;</span><br><span class="line">	Key_Init();</span><br><span class="line">	</span><br><span class="line">	<span class="keyword">while</span>(<span class="number">1</span>)</span><br><span class="line">	&#123;</span><br><span class="line">		</span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+<br>
+<h3>最终效果：</h3>
+按下PB11按键后，PA2处LED点亮；按下PA6按键后，PA2处LED熄灭。
+
+
+</font></article><div class="post-copyright"><div class="post-copyright__author"><span class="post-copyright-meta">文章作者: </span><span class="post-copyright-info"><a href="https://tinytinyshark.github.io">大鲨子</a></span></div><div class="post-copyright__type"><span class="post-copyright-meta">文章链接: </span><span class="post-copyright-info"><a href="https://tinytinyshark.github.io/2023/10/08/STM32f103c8t6%E7%9A%84%E5%A4%96%E9%83%A8%E4%B8%AD%E6%96%AD%E9%85%8D%E7%BD%AE/">https://tinytinyshark.github.io/2023/10/08/STM32f103c8t6%E7%9A%84%E5%A4%96%E9%83%A8%E4%B8%AD%E6%96%AD%E9%85%8D%E7%BD%AE/</a></span></div><div class="post-copyright__notice"><span class="post-copyright-meta">版权声明: </span><span class="post-copyright-info">本博客所有文章除特别声明外，均采用 <a href="https://creativecommons.org/licenses/by-nc-sa/4.0/" target="_blank">CC BY-NC-SA 4.0</a> 许可协议。转载请注明来自 <a href="https://tinytinyshark.github.io" target="_blank">大鲨子の小窝</a>！</span></div></div><div class="tag_share"><div class="post-meta__tag-list"><a class="post-meta__tags" href="/tags/%E5%8D%95%E7%89%87%E6%9C%BA/">单片机</a><a class="post-meta__tags" href="/tags/stm32/">stm32</a><a class="post-meta__tags" href="/tags/%E5%B5%8C%E5%85%A5%E5%BC%8F/">嵌入式</a></div><div class="post_share"><div class="social-share" data-image="https://s1.ax1x.com/2023/05/24/p97manA.jpg" data-sites="facebook,twitter,wechat,weibo,qq"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/css/share.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/sharejs/dist/js/social-share.min.js" defer></script></div></div><nav class="pagination-post" id="pagination"><div class="next-post pull-full"><a href="/2023/10/07/STM32f103c8t6%E7%9A%84%E5%AE%9A%E6%97%B6%E4%B8%AD%E6%96%AD%E9%85%8D%E7%BD%AE/" title="【技术分享】STM32f103c8t6-定时中断配置"><div class="cover" style="background: var(--default-bg-color)"></div><div class="pagination-info"><div class="label">下一篇</div><div class="next_info">【技术分享】STM32f103c8t6-定时中断配置</div></div></a></div></nav><div class="relatedPosts"><div class="headline"><i class="fas fa-thumbs-up fa-fw"></i><span>相关推荐</span></div><div class="relatedPosts-list"><div><a href="/2023/10/07/STM32f103c8t6%E7%9A%84%E5%AE%9A%E6%97%B6%E4%B8%AD%E6%96%AD%E9%85%8D%E7%BD%AE/" title="【技术分享】STM32f103c8t6-定时中断配置"><div class="cover" style="background: var(--default-bg-color)"></div><div class="content is-center"><div class="date"><i class="far fa-calendar-alt fa-fw"></i> 2023-10-07</div><div class="title">【技术分享】STM32f103c8t6-定时中断配置</div></div></a></div></div></div></div><div class="aside-content" id="aside-content"><div class="card-widget card-info"><div class="is-center"><div class="avatar-img"><img src="https://s1.ax1x.com/2023/05/24/p97manA.jpg" onerror="this.onerror=null;this.src='/img/friend_404.gif'" alt="avatar"/></div><div class="author-info__name">大鲨子</div><div class="author-info__description"></div></div><div class="card-info-data site-data is-center"><a href="/archives/"><div class="headline">文章</div><div class="length-num">5</div></a><a href="/tags/"><div class="headline">标签</div><div class="length-num">8</div></a><a href="/categories/"><div class="headline">分类</div><div class="length-num">3</div></a></div><a id="card-info-btn" target="_blank" rel="noopener" href="https://space.bilibili.com/36487163?spm_id_from=333.788.0.0"><i></i><span>我的B站主页</span></a></div><div class="card-widget card-announcement"><div class="item-headline"><i class="fas fa-bullhorn fa-shake"></i><span>公告</span></div><div class="announcement_content">欢迎！</div></div><div class="sticky_layout"><div class="card-widget" id="card-toc"><div class="item-headline"><i class="fas fa-stream"></i><span>目录</span><span class="toc-percentage"></span></div><div class="toc-content"><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">1.</span> <span class="toc-text">第一步</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">2.</span> <span class="toc-text">第二步</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">3.</span> <span class="toc-text">第三步</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">4.</span> <span class="toc-text">第四步</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">5.</span> <span class="toc-text">第五步</span></a></li><li class="toc-item toc-level-3"><a class="toc-link"><span class="toc-number">6.</span> <span class="toc-text">最终效果：</span></a></li></ol></div></div><div class="card-widget card-recent-post"><div class="item-headline"><i class="fas fa-history"></i><span>最新文章</span></div><div class="aside-list"><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/10/08/STM32f103c8t6%E7%9A%84%E5%A4%96%E9%83%A8%E4%B8%AD%E6%96%AD%E9%85%8D%E7%BD%AE/" title="【技术分享】STM32f103c8t6-外部中断配置">【技术分享】STM32f103c8t6-外部中断配置</a><time datetime="2023-10-08T15:56:12.000Z" title="发表于 2023-10-08 23:56:12">2023-10-08</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/10/07/STM32f103c8t6%E7%9A%84%E5%AE%9A%E6%97%B6%E4%B8%AD%E6%96%AD%E9%85%8D%E7%BD%AE/" title="【技术分享】STM32f103c8t6-定时中断配置">【技术分享】STM32f103c8t6-定时中断配置</a><time datetime="2023-10-07T13:56:12.000Z" title="发表于 2023-10-07 21:56:12">2023-10-07</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/08/04/HTML%E5%9F%BA%E7%A1%80%E8%AF%AD%E6%B3%95%E5%AE%8C%E7%BB%93%E6%92%92%E8%8A%B1/" title="【记录】HTML基础语法完结撒花">【记录】HTML基础语法完结撒花</a><time datetime="2023-08-03T16:23:20.000Z" title="发表于 2023-08-04 00:23:20">2023-08-04</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/07/18/Python%E6%96%87%E4%BB%B6%E8%AF%BB%E5%8F%96%E4%B8%AD%E6%8D%A2%E8%A1%8C%E7%AC%A6%E7%9A%84%E5%BD%B1%E5%93%8D/" title="【技术分享】消除Python文件读取中换行符的影响">【技术分享】消除Python文件读取中换行符的影响</a><time datetime="2023-07-18T12:08:15.000Z" title="发表于 2023-07-18 20:08:15">2023-07-18</time></div></div><div class="aside-list-item no-cover"><div class="content"><a class="title" href="/2023/05/23/%E5%8D%9A%E5%AE%A2%E9%87%8D%E5%BB%BA%E5%AE%8C%E6%88%90/" title="【记录】博客重建完成">【记录】博客重建完成</a><time datetime="2023-05-23T14:09:34.000Z" title="发表于 2023-05-23 22:09:34">2023-05-23</time></div></div></div></div></div></div></main><footer id="footer" style="background: linear-gradient(20deg, #F05F57, #4b1248)"><div id="footer-wrap"><div class="copyright">&copy;2020 - 2023 By 大鲨子</div><div class="footer_custom_text">三天之内鲨了你</div></div></footer></div><div id="rightside"><div id="rightside-config-hide"></div><div id="rightside-config-show"><button id="go-up" type="button" title="回到顶部"><span class="scroll-percent"></span><i class="fas fa-arrow-up"></i></button></div></div><div><script src="/js/utils.js"></script><script src="/js/main.js"></script><script src="/js/tw_cn.js"></script><script src="https://cdn.jsdelivr.net/npm/@fancyapps/ui/dist/fancybox/fancybox.umd.min.js"></script><script src="https://cdn.jsdelivr.net/npm/instant.page/instantpage.min.js" type="module"></script><div class="js-pjax"></div><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/dist/activate-power-mode.min.js"></script><script>POWERMODE.colorful = true;
+POWERMODE.shake = true;
+POWERMODE.mobile = false;
+document.body.addEventListener('input', POWERMODE);
+</script><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.css" media="print" onload="this.media='all'"><script src="https://cdn.jsdelivr.net/npm/aplayer/dist/APlayer.min.js"></script><script src="https://cdn.jsdelivr.net/npm/butterfly-extsrc/metingjs/dist/Meting.min.js"></script><script async data-pjax src="//busuanzi.ibruce.info/busuanzi/2.3/busuanzi.pure.mini.js"></script><div class="docsearch-wrap"><div id="docsearch" style="display:none"></div><link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@docsearch/css/dist/style.min.css"/><script src="https://cdn.jsdelivr.net/npm/@docsearch/js/dist/umd/index.min.js"></script><script>(() => {
+  docsearch(Object.assign({
+    appId: '',
+    apiKey: '',
+    indexName: '',
+    container: '#docsearch',
+  }, null))
+
+
+  const searchClickFn = () => {
+    document.querySelector('#search-button > .search').addEventListener('click', () => {
+      document.querySelector('.DocSearch-Button').click()
+    })
+  }
+
+  searchClickFn()
+  window.addEventListener('pjax:complete', searchClickFn)
+})()</script></div></div></body></html>
